@@ -1,0 +1,13 @@
+{
+  "name": "ranges",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "action": {
+    "title": "ranges",
+    "icon": "/radar.svg",
+    "popover": "/",
+    "height": 600,
+    "width": 400
+  },
+  "background_url": "/background.html"
+}
