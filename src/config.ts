@@ -1,8 +1,8 @@
 import './style.css'
 import OBR, { isShape, Item, Image, Shape }  from "@owlbear-rodeo/sdk";
-import { colors } from "./colors";
 
-import { getConfig, saveConfig, RangeConfig } from './localStorage';
+import { getConfig, saveConfig } from './localStorage';
+import { colorDropdown } from './utils';
 
 OBR.onReady(async () => {
 
@@ -44,13 +44,12 @@ const saveRanges = () => {
     const names = data.getAll("name");
     const colors = data.getAll("color");
     const ranges = data.getAll("ranges");
-    console.log(names);
+
     const newConfig = names.map((name, idx) => ({
       name: name as string,
       color: colors.find(color => color === colors[idx]) ?? {},
       ranges: (ranges as string[])[idx].split(",").map(value => parseInt(value))
     }))
-    console.log(newConfig);
     saveConfig(newConfig);
   }
 }
@@ -58,23 +57,10 @@ const saveRanges = () => {
 const rangeConfig = (config, index) => (
   `<div class="range">
            <label>Name:</label> <div><input type="text" name="name" value="${config.name}" ></div>
-           <label>Color:</label><div> ${colorDropdown(`color`, config.color)}</div>
+           <label>Color:</label><div> ${colorDropdown(`color`, config)}</div>
            <label>Ranges:</label> <div> <input type="text" name="ranges" value="${config.ranges.join(",")}" /></div>
         </div>`
 )
 
-
-const colorDropdown = (id, selected) => (
-  `<select name="${id}" style=>
-  
-   ${colors.map(color => (
-    `<option name="${color.hex}" value="${color.hex}" ${selected.hex === color.hex? "selected": ""}>
-      ${color.label}
-      </option>`
-   ))}
-   </select>
-
-  `
-)
 
 

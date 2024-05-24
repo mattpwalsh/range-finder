@@ -1,92 +1,155 @@
 import './style.css'
 import OBR, { isShape, Item, Image, Shape }  from "@owlbear-rodeo/sdk";
-import { colors } from "./colors";
+
 import { getPluginId } from './getPluginId';
 import { buildRangeRing } from './buildRangeRing';
 
+import { getConfig } from './localStorage';
+
+
+
 OBR.onReady(async () => {
+
+  const currentConfig = getConfig();
+
+
   // Setup the document with the colored buttons
   document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
-    <div class="colors">
-      ${colors
-        .map(
-          (color: string) =>
-            `
-            <button class="color-button" id="${color}">
-              <div class="color" style="background: ${color}"></div>
-            </button>
-            `
-        )
-        .join("")}
+    <div class="ranges-menu">
+    <select class="range-select">
+      <option value="none">None</option>
+      ${currentConfig.map(config => `<option value="${config.name}">${config.name}</option>`)}
+      </select>
     </div>
   `;
-  // Attach click listeners
-  document
-    .querySelectorAll<HTMLButtonElement>(".color-button")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        handleButtonClick(button);
+
+    document
+    .querySelectorAll<HTMLSelectElement>(".range-select")
+    .forEach((select) => {
+      select.addEventListener("change", () => {
+        handleRangeSelect(select);
       });
     });
-
   // Update the button states with the current selection
   const allItems = await OBR.scene.items.getItems();
-  updateColorButtons(allItems);
+  updateRangeSelect(allItems);
   // Add change listener for updating button states
-  OBR.scene.items.onChange(updateColorButtons);
+  OBR.scene.items.onChange(updateRangeSelect);
 });
 
-async function handleButtonClick(button: HTMLButtonElement) {
-  // Get the color and selection state
-  const color = button.id;
-  const selected = button.classList.contains("selected");
+const handleRangeSelect = async (select: HTMLSelectElement) => {
   const selection = await OBR.player.getSelection();
+  const currentConfig = getConfig();
+  const rangeConfig = currentConfig.find(config =>  config.name === select.value);
+  if(!rangeConfig && select.value !== "none") return
+
   if (selection) {
-    const circlesToAdd: Shape[] = [];
-    const circlesToDelete: string[] = [];
+    const rangesToAdd: Shape[] = [];
+    const rangesToDelete: string[] = [];
     // Get all selected items
     const items = await OBR.scene.items.getItems<Image>(selection);
     // Get all status rings in the scene
-    const statusRings = await OBR.scene.items.getItems<Shape>((item) => {
+    const rangeRings = await OBR.scene.items.getItems<Shape>((item) => {
       const metadata = item.metadata[getPluginId("metadata")];
       return Boolean(isPlainObject(metadata) && metadata.enabled);
     });
+
+    // if (!rangeRing) return;
+
+    // if (rangeRing && rangeRing.name === select.value)  return;
+    // if (rangeRing && select.value === "none") {
+    //   await OBR.scene.items.deleteItems([rangeRing.id]);
+    //   return;
+    // }
+
+
+
     // Get the grid dpi so we can scale the rings
     const dpi = await OBR.scene.grid.getDpi();
+    const scale = await OBR.scene.grid.getScale();
+    console.log((30/scale.parsed.multiplier) * dpi);
     for (const item of items) {
-      // Find all rings attached to this item
-      const attachedRings = statusRings.filter(
+      const attachedRanges = rangeRings.filter(
         (ring) => ring.attachedTo === item.id
       );
-      // Find all rings of the selected color attached to this item
-      const currentColorRings = attachedRings.filter(
-        (ring) => ring.style.strokeColor === color
-      );
-      // Delete the ring if it is selected else add a new ring
-      if (selected) {
-        circlesToDelete.push(...currentColorRings.map((ring) => ring.id));
-      } else {
-        circlesToAdd.push(
-          buildRangeRing(
-            item,
-            color,
-            dpi,
-            item.scale.x * (1 - attachedRings.length * 0.1)
-          )
-        );
+      if (attachedRanges.length > 0) {
+        if (select.value === "none") rangesToDelete.push(...attachedRanges.map(ar => ar.id));
+        if (select.value !== item.metadata[getPluginId("metadata")]) {
+          rangesToDelete.push(...attachedRanges.map(ar => ar.id));
+        }
+      }
+      if (rangeConfig) {
+        rangesToAdd.push(...buildRangeRing(
+          item,
+              rangeConfig.color,
+              dpi,
+              scale.parsed.multiplier,
+              select.value,
+              rangeConfig.ranges,
+        ))
       }
     }
-    if (circlesToAdd.length > 0) {
-      await OBR.scene.items.addItems(circlesToAdd);
+    if (rangesToAdd.length > 0) {
+      rangesToAdd.map(item => console.log(item.layer))
+      await OBR.scene.items.addItems(rangesToAdd);
     }
-    if (circlesToDelete.length > 0) {
-      await OBR.scene.items.deleteItems(circlesToDelete);
-      // After deleting a ring adjust the scale of the selected rings
-      // so that we don't have any gaps
-      await updateStatusRingScales(items);
+    if (rangesToDelete.length > 0) {
+      await OBR.scene.items.deleteItems(rangesToDelete);
     }
   }
 }
+
+// async function handleButtonClick(button: HTMLButtonElement) {
+//   // Get the color and selection state
+//   const color = button.id;
+//   const selected = button.classList.contains("selected");
+//   const selection = await OBR.player.getSelection();
+//   if (selection) {
+//     const circlesToAdd: Shape[] = [];
+//     const circlesToDelete: string[] = [];
+//     // Get all selected items
+//     const items = await OBR.scene.items.getItems<Image>(selection);
+//     // Get all status rings in the scene
+//     const statusRings = await OBR.scene.items.getItems<Shape>((item) => {
+//       const metadata = item.metadata[getPluginId("metadata")];
+//       return Boolean(isPlainObject(metadata) && metadata.enabled);
+//     });
+//     // Get the grid dpi so we can scale the rings
+//     const dpi = await OBR.scene.grid.getDpi();
+//     for (const item of items) {
+//       // Find all rings attached to this item
+//       const attachedRings = statusRings.filter(
+//         (ring) => ring.attachedTo === item.id
+//       );
+//       // Find all rings of the selected color attached to this item
+//       const currentColorRings = attachedRings.filter(
+//         (ring) => ring.style.strokeColor === color
+//       );
+//       // Delete the ring if it is selected else add a new ring
+//       if (selected) {
+//         circlesToDelete.push(...currentColorRings.map((ring) => ring.id));
+//       } else {
+//         circlesToAdd.push(
+//           buildRangeRing(
+//             item,
+//             color,
+//             dpi,
+//             item.scale.x * (1 - attachedRings.length * 0.1)
+//           )
+//         );
+//       }
+//     }
+//     if (circlesToAdd.length > 0) {
+//       await OBR.scene.items.addItems(circlesToAdd);
+//     }
+//     if (circlesToDelete.length > 0) {
+//       await OBR.scene.items.deleteItems(circlesToDelete);
+//       // After deleting a ring adjust the scale of the selected rings
+//       // so that we don't have any gaps
+//       await updateStatusRingScales(items);
+//     }
+//   }
+// }
 
 
 
@@ -100,12 +163,10 @@ export function isPlainObject(
 }
 
 /** Update the selected state of the color buttons */
-export async function updateColorButtons(items: Item[]) {
+export async function updateRangeSelect(items: Item[]) {
   const selection = await OBR.player.getSelection();
   // Remove all previous selected states
-  document.querySelectorAll(".color-button").forEach((element) => {
-    element.classList.remove("selected");
-  });
+  const rangeSelectBox = document.querySelectorAll(".range-select");
   // Get all the status rings that are attached to our current selection
   for (const item of items) {
     const metadata = item.metadata[getPluginId("metadata")];
@@ -116,38 +177,8 @@ export async function updateColorButtons(items: Item[]) {
       item.attachedTo &&
       selection?.includes(item.attachedTo)
     ) {
-      // Add selected state to this rings color
-      const color = item.style.strokeColor;
-      document.getElementById(color)?.classList.add("selected");
+      (rangeSelectBox[0] as HTMLSelectElement).value = metadata.name as string;
     }
   }
 }
 
-
-
-
-
-/** Update the status rings for the current selection so that there are no gaps */
-export function updateStatusRingScales(selectedItems: Item[]) {
-  const selection = selectedItems.map((item) => item.id);
-  return OBR.scene.items.updateItems(
-    (item) => {
-      const metadata = item.metadata[getPluginId("metadata")];
-      return Boolean(
-        isPlainObject(metadata) &&
-          metadata.enabled &&
-          item.attachedTo &&
-          selection.includes(item.attachedTo)
-      );
-    },
-    (items) => {
-      for (const item of selectedItems) {
-        const attached = items.filter((i) => i.attachedTo === item.id);
-        for (let i = 0; i < attached.length; i++) {
-          const scale = item.scale.x * (1 - i * 0.1);
-          attached[i].scale = { x: scale, y: scale };
-        }
-      }
-    }
-  );
-}

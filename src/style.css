@@ -79,3 +79,11 @@ body {
   width: 50%;
   margin-top: 2px;
 }
+
+.ranges-menu {
+  display: flex;
+  flex-direction: flex-row;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px;
+}
