@@ -1,5 +1,5 @@
 import './style.css'
-import OBR, { isShape, Item, Image, Shape }  from "@owlbear-rodeo/sdk";
+import OBR from "@owlbear-rodeo/sdk";
 
 import { getConfig, saveConfig } from './localStorage';
 import { colorDropdown } from './utils';
@@ -12,8 +12,8 @@ OBR.onReady(async () => {
     <div class="range-finder" style="display: flex; flex-direction: column">
       <h4>Range Config</h4>
       <form id="rangeForm">
-      ${currentConfig.map((config, index) => (
-        rangeConfig(config, index)
+      ${currentConfig.map((config: any) => (
+        rangeConfig(config)
       )).join("")}
       </form>
 
@@ -30,9 +30,8 @@ OBR.onReady(async () => {
 
 const addRange = () => {
   const form = document.getElementById("rangeForm");
-  const ranges = document.querySelectorAll(".range");
 
-  form?.insertAdjacentHTML('beforeend', rangeConfig({name: "", color: "", ranges: []}, ranges.length))
+  form?.insertAdjacentHTML('beforeend', rangeConfig({name: "", color: "", ranges: []}))
 }
 
 
@@ -54,7 +53,7 @@ const saveRanges = () => {
   }
 }
 
-const rangeConfig = (config, index) => (
+const rangeConfig = (config:any) => (
   `<div class="range">
            <label>Name:</label> <div><input type="text" name="name" value="${config.name}" ></div>
            <label>Color:</label><div> ${colorDropdown(`color`, config)}</div>

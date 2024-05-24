@@ -1,6 +1,6 @@
 import { colors } from "./colors";
 
-export const colorDropdown = (id, selected) => (
+export const colorDropdown = (id: string, selected: any) => (
   `<select name="${id}" style=>
   
    ${colors.map(color => { 

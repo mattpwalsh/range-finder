@@ -18,7 +18,7 @@ OBR.onReady(async () => {
     <div class="ranges-menu">
     <select class="range-select">
       <option value="none">None</option>
-      ${currentConfig.map(config => `<option value="${config.name}">${config.name}</option>`)}
+      ${currentConfig.map((config: any) => `<option value="${config.name}">${config.name}</option>`)}
       </select>
     </div>
   `;
@@ -40,7 +40,7 @@ OBR.onReady(async () => {
 const handleRangeSelect = async (select: HTMLSelectElement) => {
   const selection = await OBR.player.getSelection();
   const currentConfig = getConfig();
-  const rangeConfig = currentConfig.find(config =>  config.name === select.value);
+  const rangeConfig = currentConfig.find((config: any) =>  config.name === select.value);
   if(!rangeConfig && select.value !== "none") return
 
   if (selection) {
