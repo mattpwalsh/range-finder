@@ -1,7 +1,8 @@
 {
-  "name": "range-finder",
+  "name": "Range Finder",
   "version": "1.0.1",
   "manifest_version": 1,
+  "icon": "/radar.svg",
   "action": {
     "title": "Range Finder",
     "icon": "/radar.svg",
