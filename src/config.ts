@@ -58,6 +58,7 @@ const rangeConfig = (config:any) => (
            <label>Name:</label> <div><input type="text" name="name" value="${config.name}" ></div>
            <label>Color:</label><div> ${colorDropdown(`color`, config)}</div>
            <label>Ranges:</label> <div> <input type="text" name="ranges" value="${config.ranges.join(",")}" /></div>
+           <div style="display: flex; justify-content: end;"><button onclick="(e) => console.log(e.target.parentElement)">Delete</button></div>
         </div>`
 )
 

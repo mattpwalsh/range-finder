@@ -67,7 +67,7 @@ const handleRangeSelect = async (select: HTMLSelectElement) => {
     // Get the grid dpi so we can scale the rings
     const dpi = await OBR.scene.grid.getDpi();
     const scale = await OBR.scene.grid.getScale();
-    console.log((30/scale.parsed.multiplier) * dpi);
+
     for (const item of items) {
       const attachedRanges = rangeRings.filter(
         (ring) => ring.attachedTo === item.id
@@ -90,7 +90,6 @@ const handleRangeSelect = async (select: HTMLSelectElement) => {
       }
     }
     if (rangesToAdd.length > 0) {
-      rangesToAdd.map(item => console.log(item.layer))
       await OBR.scene.items.addItems(rangesToAdd);
     }
     if (rangesToDelete.length > 0) {
